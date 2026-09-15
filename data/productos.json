@@ -1,0 +1,23 @@
+[
+    {
+        "nombre": "Torta de Chocolate",
+        "categoria": "Tortas",
+        "precio": 45,
+        "descripcion": "Deliciosa torta de chocolate con crema.",
+        "imagen": "chocolate.jpg"
+    },
+    {
+        "nombre": "Cupcake de Vainilla",
+        "categoria": "Cupcakes",
+        "precio": 6,
+        "descripcion": "Cupcake de vainilla con crema dulce.",
+        "imagen": "vainilla.jpg"
+    },
+    {
+        "nombre": "Torta de Mango",
+        "categoria": "Tortas",
+        "precio": 3,
+        "descripcion": "Natural",
+        "imagen": "producto_6aa97b799991d.jpg"
+    }
+]
