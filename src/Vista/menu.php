@@ -7,7 +7,7 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Las Dulcerias - Menú Digital</title>
+    <title>Las Dulcerias - Postres Digital</title>
 
     <link rel="stylesheet" href="css/estilos.css">
 
@@ -28,7 +28,7 @@
 
 <main>
 
-    <h2>Nuestro Menú</h2>
+    <h2>Nuestro Postres</h2>
 
 
     <!-- ==========================================

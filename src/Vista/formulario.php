@@ -17,7 +17,7 @@
 
 <header>
 
-    <h1>🍰 Las Dulcerias </h1>
+    <h1>🍰 Las Dulcerias</h1>
 
     <p>Agrega una nueva delicia a nuestro menú ♡</p>
 
@@ -53,129 +53,148 @@
             enctype="multipart/form-data"
         >
 
-            <div class="campo">
+            <!-- ==========================================
+                 AGRUPACIÓN DE DATOS DEL PRODUCTO
+                 ========================================== -->
 
-                <label for="nombre">
-                    🍰 Nombre del producto
-                </label>
+            <fieldset>
 
-                <input
-                    type="text"
-                    id="nombre"
-                    name="nombre"
-                    placeholder="Ej. Torta de Fresa"
-                    required
-                >
-
-            </div>
+                <legend>🍰 Datos del producto</legend>
 
 
-            <div class="campo">
+                <!-- NOMBRE -->
 
-                <label for="categoria">
-                    🏷️ Categoría
-                </label>
+                <div class="campo">
 
-                <select
-                    id="categoria"
-                    name="categoria"
-                    required
-                >
-
-                    <option value="">
-                        Seleccionar categoría
-                    </option>
-
-                    <option value="Tortas">
-                        🎂 Tortas
-                    </option>
-
-                    <option value="Cupcakes">
-                        🧁 Cupcakes
-                    </option>
-
-                    <option value="Galletas">
-                        🍪 Galletas
-                    </option>
-
-                    <option value="Donas">
-                        🍩 Donas
-                    </option>
-
-                    <option value="Postres">
-                        🍓 Postres
-                    </option>
-
-                    <option value="Bebidas">
-                        🥤 Bebidas
-                    </option>
-
-                </select>
-
-            </div>
-
-
-            <div class="campo">
-
-                <label for="precio">
-                    💰 Precio
-                </label>
-
-                <div class="precio-input">
-
-                    <span>S/</span>
+                    <label for="nombre">
+                        🍰 Nombre del producto
+                    </label>
 
                     <input
-                        type="number"
-                        id="precio"
-                        name="precio"
-                        step="0.01"
-                        min="0"
-                        placeholder="0.00"
+                        type="text"
+                        id="nombre"
+                        name="nombre"
+                        placeholder="Ej. Torta de Fresa"
                         required
                     >
 
                 </div>
 
-            </div>
+
+                <!-- CATEGORÍA -->
+
+                <div class="campo">
+
+                    <label for="categoria">
+                        🏷️ Categoría
+                    </label>
+
+                    <select
+                        id="categoria"
+                        name="categoria"
+                        required
+                    >
+
+                        <option value="">
+                            Seleccionar categoría
+                        </option>
+
+                        <option value="Tortas">
+                            🎂 Tortas
+                        </option>
+
+                        <option value="Cupcakes">
+                            🧁 Cupcakes
+                        </option>
+
+                        <option value="Galletas">
+                            🍪 Galletas
+                        </option>
+
+                        <option value="Donas">
+                            🍩 Donas
+                        </option>
+
+                        <option value="Postres">
+                            🍓 Postres
+                        </option>
+
+                        <option value="Bebidas">
+                            🥤 Bebidas
+                        </option>
+
+                    </select>
+
+                </div>
 
 
-            <div class="campo">
+                <!-- PRECIO -->
 
-                <label for="descripcion">
-                    💌 Descripción
-                </label>
+                <div class="campo">
 
-                <textarea
-                    id="descripcion"
-                    name="descripcion"
-                    placeholder="Cuéntanos un poquito sobre este delicioso producto..."
-                    required
-                ></textarea>
+                    <label for="precio">
+                        💰 Precio
+                    </label>
 
-            </div>
+                    <div class="precio-input">
+
+                        <span>S/</span>
+
+                        <input
+                            type="number"
+                            id="precio"
+                            name="precio"
+                            step="0.01"
+                            min="0"
+                            placeholder="0.00"
+                            required
+                        >
+
+                    </div>
+
+                </div>
 
 
-            <!-- ==========================================
-                 IMAGEN DEL PRODUCTO
-                 ========================================== -->
+                <!-- DESCRIPCIÓN -->
 
-            <div class="campo">
+                <div class="campo">
 
-                <label for="imagen">
-                    🖼️ Imagen del producto
-                </label>
+                    <label for="descripcion">
+                        💌 Descripción
+                    </label>
 
-                <input
-                    type="file"
-                    id="imagen"
-                    name="imagen"
-                    accept="image/*"
-                    required
-                >
+                    <textarea
+                        id="descripcion"
+                        name="descripcion"
+                        placeholder="Cuéntanos un poquito sobre este delicioso producto..."
+                        required
+                    ></textarea>
 
-            </div>
+                </div>
 
+
+                <!-- IMAGEN -->
+
+                <div class="campo">
+
+                    <label for="imagen">
+                        🖼️ Imagen del producto
+                    </label>
+
+                    <input
+                        type="file"
+                        id="imagen"
+                        name="imagen"
+                        accept="image/*"
+                        required
+                    >
+
+                </div>
+
+            </fieldset>
+
+
+            <!-- BOTÓN REGISTRAR -->
 
             <button
                 type="submit"
@@ -184,6 +203,8 @@
                 🧁 Registrar Producto
             </button>
 
+
+            <!-- VOLVER AL MENÚ -->
 
             <a
                 href="../../public/index.php"

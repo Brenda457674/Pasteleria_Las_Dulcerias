@@ -14,10 +14,31 @@
         "imagen": "vainilla.jpg"
     },
     {
-        "nombre": "Torta de Mango",
-        "categoria": "Tortas",
-        "precio": 3,
-        "descripcion": "Natural",
-        "imagen": "producto_6aa97b799991d.jpg"
+        "nombre": "Cheesecake de Fresa",
+        "categoria": "Postres",
+        "precio": 12,
+        "descripcion": "Cheesecake cremoso con salsa de fresa.",
+        "imagen": "fresa.jpg"
+    },
+    {
+        "nombre": "Galletas con Chispas",
+        "categoria": "Galletas",
+        "precio": 8,
+        "descripcion": "Galletas caseras con deliciosas chispas de chocolate.",
+        "imagen": "galletas.jpg"
+    },
+    {
+        "nombre": "Dona Glaseada",
+        "categoria": "Donas",
+        "precio": 5,
+        "descripcion": "Dona suave cubierta con un dulce glaseado.",
+        "imagen": "dona.jpg"
+    },
+    {
+        "nombre": "Tartaleta de Fresa",
+        "categoria": "Postres",
+        "precio": 11,
+        "descripcion": "Tartaleta artesanal con crema y fresas frescas.",
+        "imagen": "tartaleta.jpg"
     }
 ]

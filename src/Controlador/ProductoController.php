@@ -209,38 +209,62 @@ class ProductoController
     // ==============================
 
     private function crearProductosIniciales()
-    {
-        $productos = [
+{
+    $productos = [
 
-            [
-                'nombre' => 'Torta de Chocolate',
-                'categoria' => 'Tortas',
-                'precio' => 45,
-                'descripcion' => 'Deliciosa torta de chocolate con crema.',
-                'imagen' => 'chocolate.jpg'
-            ],
+        [
+            'nombre' => 'Torta de Chocolate',
+            'categoria' => 'Tortas',
+            'precio' => 45,
+            'descripcion' => 'Deliciosa torta de chocolate con crema.',
+            'imagen' => 'chocolate.jpg'
+        ],
 
-            [
-                'nombre' => 'Cupcake de Vainilla',
-                'categoria' => 'Cupcakes',
-                'precio' => 6,
-                'descripcion' => 'Cupcake de vainilla con crema dulce.',
-                'imagen' => 'vainilla.jpg'
-            ],
+        [
+            'nombre' => 'Cupcake de Vainilla',
+            'categoria' => 'Cupcakes',
+            'precio' => 6,
+            'descripcion' => 'Cupcake de vainilla con crema dulce.',
+            'imagen' => 'vainilla.jpg'
+        ],
 
-            [
-                'nombre' => 'Cheesecake de Fresa',
-                'categoria' => 'Postres',
-                'precio' => 12,
-                'descripcion' => 'Cheesecake cremoso con salsa de fresa.',
-                'imagen' => 'fresa.jpg'
-            ]
+        [
+            'nombre' => 'Cheesecake de Fresa',
+            'categoria' => 'Postres',
+            'precio' => 12,
+            'descripcion' => 'Cheesecake cremoso con salsa de fresa.',
+            'imagen' => 'fresa.jpg'
+        ],
 
-        ];
+        [
+            'nombre' => 'Galletas con Chispas',
+            'categoria' => 'Galletas',
+            'precio' => 8,
+            'descripcion' => 'Galletas caseras con deliciosas chispas de chocolate.',
+            'imagen' => 'galletas.jpg'
+        ],
 
-        file_put_contents(
-            $this->archivo,
-            json_encode($productos, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
-        );
-    }
+        [
+            'nombre' => 'Dona Glaseada',
+            'categoria' => 'Donas',
+            'precio' => 5,
+            'descripcion' => 'Dona suave cubierta con un dulce glaseado.',
+            'imagen' => 'dona.jpg'
+        ],
+
+        [
+            'nombre' => 'Tartaleta de Fresa',
+            'categoria' => 'Postres',
+            'precio' => 11,
+            'descripcion' => 'Tartaleta artesanal con crema y fresas frescas.',
+            'imagen' => 'tartaleta.jpg'
+        ]
+
+    ];
+
+    file_put_contents(
+        $this->archivo,
+        json_encode($productos, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+    );
+}
 }
