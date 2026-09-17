@@ -1,965 +1,451 @@
+/* =========================================================
+   LAS DULCERIAS
+   Interacción del menú digital
+   ========================================================= */
+
 document.addEventListener("DOMContentLoaded", () => {
-
-    // =========================================================
-    // DULCE ENCANTO
-    // JavaScript moderno + kawaii
-    // =========================================================
-
-
-    // =========================================================
-    // 1. PRODUCTOS
-    // =========================================================
-
-    const productos = document.querySelectorAll(".producto");
 
     const reducirMovimiento = window.matchMedia(
         "(prefers-reduced-motion: reduce)"
     ).matches;
 
+    const productos = document.querySelectorAll(".producto");
 
-    // =========================================================
-    // 2. ANIMACIÓN DE ENTRADA
-    // =========================================================
 
-    if (!reducirMovimiento) {
+    /* ---------------------------------------------------------
+       Utilidades
+       --------------------------------------------------------- */
 
-        productos.forEach((producto, index) => {
+    const escaparHTML = (texto) =>
+        String(texto).replace(/[&<>"']/g, (caracter) => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;"
+        }[caracter]));
 
-            producto.style.opacity = "0";
-            producto.style.transform =
-                "translateY(25px) scale(0.98)";
 
-            setTimeout(() => {
+    const retardar = (funcion, espera = 120) => {
 
-                producto.style.transition =
-                    "opacity 0.65s ease, transform 0.65s cubic-bezier(.2,.8,.2,1)";
+        let temporizador;
 
-                producto.style.opacity = "1";
-                producto.style.transform =
-                    "translateY(0) scale(1)";
+        return (...argumentos) => {
+            clearTimeout(temporizador);
+            temporizador = setTimeout(() => funcion(...argumentos), espera);
+        };
+    };
 
-            }, 100 + index * 100);
 
+    /* =========================================================
+       1. APARICIÓN DE LAS TARJETAS AL HACER SCROLL
+       ---------------------------------------------------------
+       El CSS define el estado inicial y la transición.
+       Aquí solo se añade la clase y un retardo escalonado,
+       nunca estilos en línea de transform: eso rompería
+       el hover de la tarjeta.
+       ========================================================= */
+
+    if (!reducirMovimiento && "IntersectionObserver" in window) {
+
+        const observador = new IntersectionObserver((entradas, observer) => {
+
+            entradas.forEach((entrada) => {
+
+                if (!entrada.isIntersecting) return;
+
+                const posicion = Number(entrada.target.dataset.orden || 0);
+
+                entrada.target.style.transitionDelay = `${Math.min(posicion, 6) * 70}ms`;
+                entrada.target.classList.add("producto-visible");
+
+                observer.unobserve(entrada.target);
+            });
+
+        }, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
+
+
+        productos.forEach((producto, indice) => {
+            producto.dataset.orden = indice % 4;
+            producto.classList.add("producto-reveal");
+            observador.observe(producto);
         });
 
+    } else {
+
+        productos.forEach((producto) => {
+            producto.classList.add("producto-visible");
+        });
     }
 
 
-    // =========================================================
-    // 3. HOVER PREMIUM + TILT 3D
-    // =========================================================
+    /* =========================================================
+       2. BUSCADOR CON SUGERENCIAS
+       ========================================================= */
 
-    const esMovil =
-        window.matchMedia("(max-width: 768px)").matches;
-
-
-    if (!reducirMovimiento) {
-
-        productos.forEach(producto => {
-
-            const imagen = producto.querySelector("img");
-
-
-            // ---------------------------------------------
-            // Entrada del mouse
-            // ---------------------------------------------
-
-            producto.addEventListener("mouseenter", () => {
-
-                producto.style.transition =
-                    "transform 0.25s ease, box-shadow 0.25s ease";
-
-                producto.style.zIndex = "2";
-
-                if (imagen) {
-
-                    imagen.style.transition =
-                        "transform 0.45s ease";
-
-                    imagen.style.transform =
-                        "scale(1.04)";
-                }
-
-            });
-
-
-            // ---------------------------------------------
-            // Movimiento del mouse
-            // ---------------------------------------------
-
-            if (!esMovil) {
-
-                producto.addEventListener("mousemove", (evento) => {
-
-                    const rect =
-                        producto.getBoundingClientRect();
-
-
-                    const x =
-                        evento.clientX - rect.left;
-
-                    const y =
-                        evento.clientY - rect.top;
-
-
-                    const centroX =
-                        rect.width / 2;
-
-                    const centroY =
-                        rect.height / 2;
-
-
-                    const rotacionY =
-                        ((x - centroX) / centroX) * 2.5;
-
-                    const rotacionX =
-                        ((centroY - y) / centroY) * 2.5;
-
-
-                    producto.style.transform =
-                        `translateY(-7px) scale(1.015) rotateX(${rotacionX}deg) rotateY(${rotacionY}deg)`;
-
-                });
-
-            }
-
-
-            // ---------------------------------------------
-            // Salida del mouse
-            // ---------------------------------------------
-
-            producto.addEventListener("mouseleave", () => {
-
-                producto.style.transition =
-                    "transform 0.4s ease, box-shadow 0.4s ease";
-
-                producto.style.transform =
-                    "translateY(0) scale(1) rotateX(0) rotateY(0)";
-
-                producto.style.zIndex = "1";
-
-
-                if (imagen) {
-
-                    imagen.style.transform =
-                        "scale(1)";
-
-                }
-
-            });
-
-        });
-
-    }
-
-
-    // =========================================================
-    // 4. BUSCADOR
-    // =========================================================
-
-    const buscador =
-        document.getElementById("buscar");
-
-    const sugerencias =
-        document.getElementById("sugerencias");
+    const buscador = document.getElementById("buscar");
+    const sugerencias = document.getElementById("sugerencias");
 
 
     if (buscador && sugerencias) {
 
+        const formulario = buscador.closest("form");
 
-        // -----------------------------------------------------
-        // Obtener productos reales del HTML
-        // -----------------------------------------------------
+        let resultadosActuales = [];
+        let indiceActivo = -1;
 
-        const obtenerNombresProductos = () => {
+
+        buscador.setAttribute("role", "combobox");
+        buscador.setAttribute("aria-autocomplete", "list");
+        buscador.setAttribute("aria-expanded", "false");
+        buscador.setAttribute("aria-controls", "sugerencias");
+        sugerencias.setAttribute("role", "listbox");
+
+
+        const catalogo = () => {
 
             const nombres = [];
 
-            document
-                .querySelectorAll(".producto h3")
-                .forEach(titulo => {
-
-                    const nombre =
-                        titulo.textContent.trim();
-
-                    if (nombre) {
-
-                        nombres.push(nombre);
-
-                    }
-
-                });
-
+            document.querySelectorAll(".producto h3").forEach((titulo) => {
+                const nombre = titulo.textContent.trim();
+                if (nombre) nombres.push(nombre);
+            });
 
             return [...new Set(nombres)];
-
         };
 
 
-        // -----------------------------------------------------
-        // Mostrar sugerencias
-        // -----------------------------------------------------
+        const cerrarLista = () => {
+            sugerencias.innerHTML = "";
+            sugerencias.style.display = "none";
+            buscador.setAttribute("aria-expanded", "false");
+            resultadosActuales = [];
+            indiceActivo = -1;
+        };
 
-        const mostrarSugerencias = () => {
 
-            const texto =
-                buscador.value
-                    .trim()
-                    .toLowerCase();
+        const marcarActivo = (nuevoIndice) => {
 
+            const opciones = sugerencias.querySelectorAll(".sugerencia");
+            if (!opciones.length) return;
+
+            indiceActivo = (nuevoIndice + opciones.length) % opciones.length;
+
+            opciones.forEach((opcion, i) => {
+                const activa = i === indiceActivo;
+                opcion.classList.toggle("sugerencia-activa", activa);
+                opcion.setAttribute("aria-selected", activa ? "true" : "false");
+            });
+
+            opciones[indiceActivo].scrollIntoView({ block: "nearest" });
+        };
+
+
+        const elegir = (nombre) => {
+            buscador.value = nombre;
+            cerrarLista();
+            if (formulario) formulario.submit();
+        };
+
+
+        const resaltar = (nombre, consulta) => {
+
+            const posicion = nombre.toLowerCase().indexOf(consulta);
+            if (posicion === -1) return escaparHTML(nombre);
+
+            const antes = escaparHTML(nombre.slice(0, posicion));
+            const medio = escaparHTML(nombre.slice(posicion, posicion + consulta.length));
+            const despues = escaparHTML(nombre.slice(posicion + consulta.length));
+
+            return `${antes}<span class="sugerencia-coincidencia">${medio}</span>${despues}`;
+        };
+
+
+        const abrirLista = () => {
+
+            const consulta = buscador.value.trim().toLowerCase();
+
+            if (consulta === "") {
+                cerrarLista();
+                return;
+            }
+
+            resultadosActuales = catalogo()
+                .filter((nombre) => nombre.toLowerCase().includes(consulta))
+                .slice(0, 6);
 
             sugerencias.innerHTML = "";
+            indiceActivo = -1;
 
+            if (resultadosActuales.length === 0) {
 
-            if (texto === "") {
-
-                sugerencias.style.display =
-                    "none";
-
-                return;
-
-            }
-
-
-            const productosDisponibles =
-                obtenerNombresProductos();
-
-
-            const resultados =
-                productosDisponibles.filter(producto =>
-                    producto
-                        .toLowerCase()
-                        .includes(texto)
-                );
-
-
-            if (resultados.length === 0) {
-
-                const vacio =
-                    document.createElement("div");
-
-                vacio.className =
-                    "sugerencia-vacia";
-
-                vacio.textContent =
-                    "No se encontraron productos 💔";
-
+                const vacio = document.createElement("div");
+                vacio.className = "sugerencia-vacia";
+                vacio.textContent = "Ningún postre coincide con esa búsqueda";
                 sugerencias.appendChild(vacio);
 
-                sugerencias.style.display =
-                    "block";
+            } else {
 
-                return;
+                resultadosActuales.forEach((nombre, i) => {
 
-            }
+                    const opcion = document.createElement("div");
+                    opcion.className = "sugerencia";
+                    opcion.setAttribute("role", "option");
+                    opcion.setAttribute("aria-selected", "false");
+                    opcion.innerHTML = resaltar(nombre, consulta);
 
+                    opcion.addEventListener("mouseenter", () => marcarActivo(i));
+                    opcion.addEventListener("mousedown", (evento) => {
+                        evento.preventDefault();
+                        elegir(nombre);
+                    });
 
-            resultados
-                .slice(0, 6)
-                .forEach((producto, index) => {
-
-                    const elemento =
-                        document.createElement("div");
-
-                    elemento.className =
-                        "sugerencia";
-
-                    elemento.textContent =
-                        "🧁 " + producto;
-
-
-                    if (!reducirMovimiento) {
-
-                        elemento.style.opacity = "0";
-
-                        elemento.style.transform =
-                            "translateY(-5px)";
-
-                        elemento.style.transition =
-                            "opacity 0.2s ease, transform 0.2s ease";
-
-                    }
-
-
-                    elemento.addEventListener(
-                        "click",
-                        () => {
-
-                            buscador.value =
-                                producto;
-
-                            sugerencias.innerHTML =
-                                "";
-
-                            sugerencias.style.display =
-                                "none";
-
-                            // Enviar automáticamente
-                            // la búsqueda GET
-                            const formulario =
-                                buscador.closest("form");
-
-                            if (formulario) {
-
-                                formulario.submit();
-
-                            }
-
-                        }
-                    );
-
-
-                    sugerencias.appendChild(
-                        elemento
-                    );
-
-
-                    if (!reducirMovimiento) {
-
-                        setTimeout(() => {
-
-                            elemento.style.opacity =
-                                "1";
-
-                            elemento.style.transform =
-                                "translateY(0)";
-
-                        }, index * 45);
-
-                    }
-
+                    sugerencias.appendChild(opcion);
                 });
+            }
 
-
-            sugerencias.style.display =
-                "block";
-
+            sugerencias.style.display = "block";
+            buscador.setAttribute("aria-expanded", "true");
         };
 
 
-        // -----------------------------------------------------
-        // Escribir
-        // -----------------------------------------------------
+        buscador.addEventListener("input", retardar(abrirLista));
 
-        buscador.addEventListener(
-            "input",
-            mostrarSugerencias
-        );
-
-
-        // -----------------------------------------------------
-        // Focus
-        // -----------------------------------------------------
-
-        buscador.addEventListener(
-            "focus",
-            () => {
-
-                if (
-                    buscador.value.trim() !== ""
-                ) {
-
-                    mostrarSugerencias();
-
-                }
-
-            }
-        );
-
-
-        // -----------------------------------------------------
-        // Click fuera
-        // -----------------------------------------------------
-
-        document.addEventListener(
-            "click",
-            (evento) => {
-
-                if (
-                    !buscador.contains(evento.target) &&
-                    !sugerencias.contains(evento.target)
-                ) {
-
-                    sugerencias.innerHTML =
-                        "";
-
-                    sugerencias.style.display =
-                        "none";
-
-                }
-
-            }
-        );
-
-    }
-
-
-    // =========================================================
-    // 5. TOAST / NOTIFICACIONES
-    // =========================================================
-
-    const mostrarToast = (
-        mensaje,
-        tipo = "exito"
-    ) => {
-
-        const toast =
-            document.createElement("div");
-
-        toast.className =
-            `toast-dulce ${tipo}`;
-
-
-        toast.innerHTML = `
-            <span class="toast-icono">
-                ${tipo === "exito" ? "🧁" : "♡"}
-            </span>
-
-            <span class="toast-mensaje">
-                ${mensaje}
-            </span>
-
-            <button
-                type="button"
-                class="toast-cerrar"
-                aria-label="Cerrar notificación"
-            >
-                ×
-            </button>
-        `;
-
-
-        document.body.appendChild(toast);
-
-
-        const cerrar =
-            toast.querySelector(".toast-cerrar");
-
-
-        const eliminarToast = () => {
-
-            toast.classList.add(
-                "toast-saliendo"
-            );
-
-
-            setTimeout(() => {
-
-                toast.remove();
-
-            }, 300);
-
-        };
-
-
-        cerrar.addEventListener(
-            "click",
-            eliminarToast
-        );
-
-
-        requestAnimationFrame(() => {
-
-            toast.classList.add(
-                "toast-visible"
-            );
-
+        buscador.addEventListener("focus", () => {
+            if (buscador.value.trim() !== "") abrirLista();
         });
 
 
-        setTimeout(
-            eliminarToast,
-            3500
-        );
+        buscador.addEventListener("keydown", (evento) => {
 
+            const abierta = sugerencias.style.display === "block";
+
+            switch (evento.key) {
+
+                case "ArrowDown":
+                    if (!abierta) { abrirLista(); return; }
+                    evento.preventDefault();
+                    marcarActivo(indiceActivo + 1);
+                    break;
+
+                case "ArrowUp":
+                    if (!abierta) return;
+                    evento.preventDefault();
+                    marcarActivo(indiceActivo - 1);
+                    break;
+
+                case "Enter":
+                    evento.preventDefault();
+                    if (abierta && indiceActivo >= 0) {
+                        elegir(resultadosActuales[indiceActivo]);
+                    } else if (formulario) {
+                        formulario.submit();
+                    }
+                    break;
+
+                case "Escape":
+                    cerrarLista();
+                    break;
+            }
+        });
+
+
+        document.addEventListener("click", (evento) => {
+            if (!buscador.contains(evento.target) &&
+                !sugerencias.contains(evento.target)) {
+                cerrarLista();
+            }
+        });
+    }
+
+
+    /* =========================================================
+       3. AVISOS
+       ========================================================= */
+
+    let avisoActivo = null;
+
+    const mostrarAviso = (mensaje, tipo = "exito") => {
+
+        if (avisoActivo) avisoActivo.remove();
+
+        const aviso = document.createElement("div");
+        aviso.className = `toast-dulce toast-${tipo}`;
+        aviso.setAttribute("role", tipo === "error" ? "alert" : "status");
+
+        aviso.innerHTML = `
+            <span class="toast-icono" aria-hidden="true">${tipo === "error" ? "!" : "✓"}</span>
+            <span class="toast-mensaje">${escaparHTML(mensaje)}</span>
+            <button type="button" class="toast-cerrar" aria-label="Cerrar aviso">×</button>
+        `;
+
+        document.body.appendChild(aviso);
+        avisoActivo = aviso;
+
+        const cerrar = () => {
+            aviso.classList.add("toast-saliendo");
+            setTimeout(() => {
+                aviso.remove();
+                if (avisoActivo === aviso) avisoActivo = null;
+            }, 300);
+        };
+
+        aviso.querySelector(".toast-cerrar").addEventListener("click", cerrar);
+
+        requestAnimationFrame(() => aviso.classList.add("toast-visible"));
+
+        setTimeout(cerrar, 4000);
+
+        return aviso;
     };
 
 
-    // =========================================================
-    // 6. MODAL PARA ELIMINAR
-    // =========================================================
+    /* =========================================================
+       4. ELIMINAR PRODUCTO
+       ========================================================= */
 
-    const crearModalEliminar = () => {
+    const crearModal = (nombre) => {
 
-        const modal =
-            document.createElement("div");
-
-        modal.className =
-            "modal-eliminar";
-
+        const modal = document.createElement("div");
+        modal.className = "modal-eliminar";
 
         modal.innerHTML = `
-            <div
-                class="modal-fondo"
-                data-cerrar-modal
-            ></div>
+            <div class="modal-fondo" data-cerrar></div>
 
-            <div
-                class="modal-contenido"
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="titulo-modal-eliminar"
-            >
+            <div class="modal-contenido"
+                 role="dialog"
+                 aria-modal="true"
+                 aria-labelledby="titulo-modal-eliminar">
 
-                <div class="modal-icono">
-                    🐾
-                </div>
+                <div class="modal-icono" aria-hidden="true">🗑️</div>
 
-                <h2 id="titulo-modal-eliminar">
-                    ¿Eliminar producto?
-                </h2>
+                <h2 id="titulo-modal-eliminar">Retirar del menú</h2>
 
                 <p class="modal-texto">
-                    ¿Seguro que deseas retirar
-                    este producto del menú?
+                    El producto dejará de mostrarse en la carta.
+                    Esta acción no se puede deshacer.
                 </p>
 
-                <p class="modal-producto"></p>
+                <p class="modal-producto">${escaparHTML(nombre)}</p>
 
                 <div class="modal-botones">
-
-                    <button
-                        type="button"
-                        class="modal-cancelar"
-                    >
-                        Cancelar
-                    </button>
-
-                    <button
-                        type="button"
-                        class="modal-confirmar"
-                    >
-                        Eliminar
-                    </button>
-
+                    <button type="button" class="modal-cancelar">Cancelar</button>
+                    <button type="button" class="modal-confirmar">Retirar</button>
                 </div>
-
             </div>
         `;
 
-
         document.body.appendChild(modal);
-
         return modal;
-
     };
 
 
-    // =========================================================
-    // 7. DELETE
-    // =========================================================
+    document.querySelectorAll(".btn-eliminar").forEach((boton) => {
 
-    const botonesEliminar =
-        document.querySelectorAll(
-            ".btn-eliminar"
-        );
+        boton.addEventListener("click", () => {
 
+            const nombre = boton.dataset.nombre;
+            if (!nombre) return;
 
-    botonesEliminar.forEach(boton => {
+            const modal = crearModal(nombre);
+            const cancelar = modal.querySelector(".modal-cancelar");
+            const confirmar = modal.querySelector(".modal-confirmar");
+            const enfocables = modal.querySelectorAll("button");
 
-        boton.addEventListener(
-            "click",
-            () => {
+            document.body.style.overflow = "hidden";
 
-                const nombre =
-                    boton.getAttribute(
-                        "data-nombre"
-                    );
 
+            const cerrarModal = () => {
+                modal.classList.remove("modal-visible");
+                document.removeEventListener("keydown", manejarTeclas);
+                document.body.style.overflow = "";
+                setTimeout(() => modal.remove(), 250);
+                boton.focus();
+            };
 
-                const modal =
-                    crearModalEliminar();
 
+            const manejarTeclas = (evento) => {
 
-                const productoTexto =
-                    modal.querySelector(
-                        ".modal-producto"
-                    );
+                if (evento.key === "Escape") {
+                    cerrarModal();
+                    return;
+                }
 
+                /* el foco no se escapa del diálogo */
+                if (evento.key === "Tab") {
 
-                productoTexto.textContent =
-                    `🧁 ${nombre}`;
+                    const primero = enfocables[0];
+                    const ultimo = enfocables[enfocables.length - 1];
 
-
-                const cerrarModal = () => {
-
-                    modal.classList.add(
-                        "modal-saliendo"
-                    );
-
-
-                    setTimeout(() => {
-
-                        modal.remove();
-
-                    }, 250);
-
-                };
-
-
-                const cancelar =
-                    modal.querySelector(
-                        ".modal-cancelar"
-                    );
-
-
-                const confirmar =
-                    modal.querySelector(
-                        ".modal-confirmar"
-                    );
-
-
-                cancelar.addEventListener(
-                    "click",
-                    cerrarModal
-                );
-
-
-                const fondo =
-                    modal.querySelector(
-                        "[data-cerrar-modal]"
-                    );
-
-
-                fondo.addEventListener(
-                    "click",
-                    cerrarModal
-                );
-
-
-                // -------------------------------------------------
-                // ESC
-                // -------------------------------------------------
-
-                const manejarEscape =
-                    (evento) => {
-
-                        if (
-                            evento.key ===
-                            "Escape"
-                        ) {
-
-                            cerrarModal();
-
-                            document.removeEventListener(
-                                "keydown",
-                                manejarEscape
-                            );
-
-                        }
-
-                    };
-
-
-                document.addEventListener(
-                    "keydown",
-                    manejarEscape
-                );
-
-
-                // -------------------------------------------------
-                // Confirmar eliminación
-                // -------------------------------------------------
-
-                confirmar.addEventListener(
-                    "click",
-                    async () => {
-
-                        confirmar.disabled =
-                            true;
-
-                        confirmar.textContent =
-                            "Eliminando...";
-
-
-                        try {
-
-                            const respuesta =
-                                await fetch(
-                                    "index.php",
-                                    {
-                                        method: "DELETE",
-
-                                        headers: {
-                                            "Content-Type":
-                                                "application/json"
-                                        },
-
-                                        body:
-                                            JSON.stringify({
-                                                nombre:
-                                                    nombre
-                                            })
-                                    }
-                                );
-
-
-                            const resultado =
-                                await respuesta.json();
-
-
-                            if (!respuesta.ok) {
-
-                                throw new Error(
-                                    resultado.mensaje ||
-                                    "No se pudo eliminar el producto."
-                                );
-
-                            }
-
-
-                            cerrarModal();
-
-
-                            mostrarToast(
-                                "Producto eliminado correctamente ♡",
-                                "exito"
-                            );
-
-
-                            setTimeout(() => {
-
-                                window.location.reload();
-
-                            }, 900);
-
-
-                        } catch (error) {
-
-                            console.error(
-                                error
-                            );
-
-
-                            confirmar.disabled =
-                                false;
-
-                            confirmar.textContent =
-                                "Eliminar";
-
-
-                            mostrarToast(
-                                error.message ||
-                                "Ocurrió un error al eliminar.",
-                                "error"
-                            );
-
-                        }
-
+                    if (evento.shiftKey && document.activeElement === primero) {
+                        evento.preventDefault();
+                        ultimo.focus();
+                    } else if (!evento.shiftKey && document.activeElement === ultimo) {
+                        evento.preventDefault();
+                        primero.focus();
                     }
-                );
-
-
-                // -------------------------------------------------
-                // Mostrar modal
-                // -------------------------------------------------
-
-                requestAnimationFrame(() => {
-
-                    modal.classList.add(
-                        "modal-visible"
-                    );
-
-                });
-
-
-                // Enfocar cancelar
-                setTimeout(() => {
-
-                    cancelar.focus();
-
-                }, 100);
-
-            }
-
-        );
-
-    });
-
-
-    // =========================================================
-    // 8. BOTONES
-    // =========================================================
-
-    const botones =
-        document.querySelectorAll(
-            "button, .btn-registrar, .btn-volver"
-        );
-
-
-    if (!reducirMovimiento) {
-
-        botones.forEach(boton => {
-
-            boton.addEventListener(
-                "pointerdown",
-                () => {
-
-                    boton.style.transform =
-                        "scale(0.96)";
-
                 }
-            );
+            };
 
 
-            boton.addEventListener(
-                "pointerup",
-                () => {
-
-                    boton.style.transform =
-                        "";
-
-                }
-            );
+            cancelar.addEventListener("click", cerrarModal);
+            modal.querySelector("[data-cerrar]").addEventListener("click", cerrarModal);
+            document.addEventListener("keydown", manejarTeclas);
 
 
-            boton.addEventListener(
-                "pointerleave",
-                () => {
+            confirmar.addEventListener("click", async () => {
 
-                    boton.style.transform =
-                        "";
+                confirmar.disabled = true;
+                cancelar.disabled = true;
+                confirmar.textContent = "Retirando…";
 
-                }
-            );
+                try {
 
-        });
-
-    }
-
-
-    // =========================================================
-    // 9. SCROLL REVEAL
-    // =========================================================
-
-    if (
-        !reducirMovimiento &&
-        "IntersectionObserver" in window
-    ) {
-
-        const observador =
-            new IntersectionObserver(
-                (entradas, observer) => {
-
-                    entradas.forEach(entrada => {
-
-                        if (
-                            entrada.isIntersecting
-                        ) {
-
-                            entrada.target.classList.add(
-                                "producto-visible"
-                            );
-
-
-                            observer.unobserve(
-                                entrada.target
-                            );
-
-                        }
-
+                    const respuesta = await fetch("index.php", {
+                        method: "DELETE",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ nombre })
                     });
 
-                },
-                {
-                    threshold: 0.12
+                    const resultado = await respuesta.json();
+
+                    if (!respuesta.ok) {
+                        throw new Error(resultado.mensaje || "No se pudo retirar el producto.");
+                    }
+
+                    cerrarModal();
+
+                    /* la tarjeta desaparece antes de recargar:
+                       el cambio se ve, no solo se anuncia */
+                    const tarjeta = boton.closest(".producto");
+
+                    if (tarjeta && !reducirMovimiento) {
+                        tarjeta.classList.add("producto-saliendo");
+                    }
+
+                    mostrarAviso(`${nombre} se retiró del menú`, "exito");
+
+                    setTimeout(() => window.location.reload(), 900);
+
+                } catch (error) {
+
+                    console.error(error);
+
+                    confirmar.disabled = false;
+                    cancelar.disabled = false;
+                    confirmar.textContent = "Retirar";
+
+                    mostrarAviso(
+                        error.message || "No se pudo conectar con el servidor.",
+                        "error"
+                    );
                 }
-            );
+            });
 
 
-        productos.forEach(producto => {
-
-            producto.classList.add(
-                "producto-reveal"
-            );
-
-
-            observador.observe(
-                producto
-            );
-
+            requestAnimationFrame(() => modal.classList.add("modal-visible"));
+            setTimeout(() => cancelar.focus(), 120);
         });
-
-    }
-
-
-    // =========================================================
-    // 10. DETALLE KAWAII SUTIL
-    // =========================================================
-
-    const crearDetalleKawaii = () => {
-
-        if (reducirMovimiento) {
-            return;
-        }
-
-
-        const detalle =
-            document.createElement("span");
-
-        detalle.className =
-            "detalle-kawaii";
-
-        detalle.textContent =
-            Math.random() > 0.5
-                ? "♡"
-                : "✦";
-
-
-        detalle.style.left =
-            `${Math.random() * 90 + 5}%`;
-
-        detalle.style.top =
-            `${Math.random() * 70 + 15}%`;
-
-
-        document.body.appendChild(
-            detalle
-        );
-
-
-        setTimeout(() => {
-
-            detalle.classList.add(
-                "detalle-kawaii-visible"
-            );
-
-        }, 20);
-
-
-        setTimeout(() => {
-
-            detalle.classList.remove(
-                "detalle-kawaii-visible"
-            );
-
-
-            setTimeout(() => {
-
-                detalle.remove();
-
-            }, 500);
-
-        }, 1800);
-
-    };
-
-
-    // Solo un detalle ocasional
-    // para no saturar la página.
-
-    if (!reducirMovimiento) {
-
-        setTimeout(
-            crearDetalleKawaii,
-            1800
-        );
-
-    }
-
-
-    // =========================================================
-    // FIN
-    // =========================================================
+    });
 
 });

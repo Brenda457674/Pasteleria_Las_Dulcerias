@@ -7,7 +7,7 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Las Dulcerias - Postres Digital</title>
+    <title>Las Dulcerias · Pastelería artesanal</title>
 
     <link rel="stylesheet" href="css/estilos.css">
 
@@ -19,7 +19,7 @@
 
 <header>
 
-    <h1>🍰 Las Dulcerias</h1>
+    <h1>Las Dulcerias</h1>
 
     <p>Pastelería artesanal</p>
 
@@ -28,155 +28,114 @@
 
 <main>
 
-    <h2>Nuestro Postres</h2>
+    <h2>Nuestros postres</h2>
 
 
     <!-- ==========================================
-         FORMULARIO GET
+         BÚSQUEDA (GET)
          ========================================== -->
 
-    <form method="GET" action="index.php" class="form-busqueda">
+    <form method="GET" action="index.php" class="form-busqueda" role="search">
 
         <div class="buscador">
+
+            <label for="buscar" class="visualmente-oculto">Buscar postre</label>
 
             <input
                 type="text"
                 id="buscar"
                 name="buscar"
-                placeholder="🔎 Buscar producto..."
+                placeholder="Buscar un postre por nombre"
                 value="<?php echo htmlspecialchars($_GET['buscar'] ?? ''); ?>"
                 autocomplete="off"
             >
-
-            <!-- Sugerencias del buscador -->
 
             <div id="sugerencias" class="sugerencias"></div>
 
         </div>
 
 
-        <select name="categoria">
+        <label for="categoria" class="visualmente-oculto">Filtrar por categoría</label>
 
-            <option value="">
-                Todas las categorías
-            </option>
+        <select name="categoria" id="categoria">
 
-            <option
-                value="Tortas"
-                <?php echo (($_GET['categoria'] ?? '') === 'Tortas') ? 'selected' : ''; ?>
-            >
-                🎂 Tortas
-            </option>
+            <option value="">Todas las categorías</option>
 
-            <option
-                value="Cupcakes"
-                <?php echo (($_GET['categoria'] ?? '') === 'Cupcakes') ? 'selected' : ''; ?>
-            >
-                🧁 Cupcakes
-            </option>
+            <?php
 
-            <option
-                value="Galletas"
-                <?php echo (($_GET['categoria'] ?? '') === 'Galletas') ? 'selected' : ''; ?>
-            >
-                🍪 Galletas
-            </option>
+            $categorias = ['Tortas', 'Cupcakes', 'Galletas', 'Donas', 'Postres'];
 
-            <option
-                value="Donas"
-                <?php echo (($_GET['categoria'] ?? '') === 'Donas') ? 'selected' : ''; ?>
-            >
-                🍩 Donas
-            </option>
+            foreach ($categorias as $categoria):
 
-            <option
-                value="Postres"
-                <?php echo (($_GET['categoria'] ?? '') === 'Postres') ? 'selected' : ''; ?>
-            >
-                🍓 Postres
-            </option>
+                $seleccionada = (($_GET['categoria'] ?? '') === $categoria)
+                    ? 'selected'
+                    : '';
+            ?>
+
+                <option value="<?php echo $categoria; ?>" <?php echo $seleccionada; ?>>
+                    <?php echo $categoria; ?>
+                </option>
+
+            <?php endforeach; ?>
 
         </select>
 
 
-        <button type="submit">
-
-            🔎 Buscar
-
-        </button>
+        <button type="submit">Buscar</button>
 
     </form>
 
 
-    <br>
-
-
     <!-- ==========================================
-         PRODUCTOS
+         VITRINA
          ========================================== -->
 
     <div class="productos">
 
         <?php if (empty($productos)): ?>
 
-            <p>No se encontraron productos. 💔</p>
+            <p class="productos-vacio">
+                No hay postres que coincidan con esa búsqueda.
+                Prueba con otro nombre o quita el filtro de categoría.
+            </p>
 
         <?php else: ?>
 
             <?php foreach ($productos as $producto): ?>
 
-                <div class="producto">
+                <article class="producto">
 
                     <img
                         src="img/<?php echo htmlspecialchars($producto->getImagen()); ?>"
                         alt="<?php echo htmlspecialchars($producto->getNombre()); ?>"
+                        loading="lazy"
                     >
 
+                    <p class="categoria">
+                        <?php echo htmlspecialchars($producto->getCategoria()); ?>
+                    </p>
 
                     <h3>
-
                         <?php echo htmlspecialchars($producto->getNombre()); ?>
-
                     </h3>
 
-
-                    <p class="categoria">
-
-                        <?php echo htmlspecialchars($producto->getCategoria()); ?>
-
-                    </p>
-
-
                     <p>
-
                         <?php echo htmlspecialchars($producto->getDescripcion()); ?>
-
                     </p>
-
 
                     <strong>
-
-                        S/
-                        <?php echo number_format($producto->getPrecio(), 2); ?>
-
+                        S/ <?php echo number_format($producto->getPrecio(), 2); ?>
                     </strong>
-
-
-                    <!-- ==========================================
-                         BOTÓN ELIMINAR
-                         ========================================== -->
 
                     <button
                         type="button"
                         class="btn-eliminar"
                         data-nombre="<?php echo htmlspecialchars($producto->getNombre()); ?>"
                     >
-
-                        🗑️ Eliminar
-
+                        Retirar del menú
                     </button>
 
-                </div>
+                </article>
 
             <?php endforeach; ?>
 
@@ -185,18 +144,11 @@
     </div>
 
 
-    <br><br>
-
-
     <!-- ==========================================
-         BOTÓN REGISTRAR
+         ALTA DE PRODUCTO
          ========================================== -->
 
-    <a href="../src/Vista/formulario.php">
-
-        🧁 Agregar producto
-
-    </a>
+    <a href="../src/Vista/formulario.php">Agregar producto</a>
 
 
 </main>
